@@ -1,0 +1,197 @@
+* Initialize Screen capture
+
+  view init svga
+  view list # Read window number
+  view set WINNUM
+
+* Sintassi simile al C
+
+* Chiusure
+
+
+#+begin_src js :exports both :results output
+var genF = function(nome) {
+    return function() {
+        console.log("Ciao " + nome);
+    }
+}
+
+setTimeout(genF("Vittorio"), 1000)
+#+end_src
+
+#+RESULTS:
+: Ciao Vittorio
+
+
+
+
+* Moduli
+
+  - npm init
+
+  - lodash (functional-like utilities).
+
+  - mappa su array di numeri
+
+#+begin_src js :exports both :results output
+var _ = require('lodash');
+var r = [1,2,3]
+
+_.map(_.filter(r, function(v) {
+    return v<3;
+}), function(i) {
+    console.log(i);
+})
+#+end_src
+
+#+RESULTS:
+: 1
+: 2
+
+* Leggi e filtra file di oggetti
+
+
+#+begin_src js :exports both :results output
+var _ = require('lodash');
+var fs = require('fs');
+
+fs.readFile('./data.json', 'utf8', function(err, data) {
+    if(err) {
+        console.log('sorry, error');
+    } else {
+        var d = JSON.parse(data);
+        _.forEach(_.filter(d, function(it) {
+           return it.age < 26
+        }), function(it) {
+            console.log(it.lastName);
+        })
+    }
+})
+#+end_src
+
+#+RESULTS:
+: Flinn
+: Young
+: Milligan
+
+
+* Express
+
+#+begin_src language :exports both :results output
+var _ = require('lodash');
+var fs = require('fs');
+
+var express = require('express');
+var app = express();
+
+
+fs.readFile('./data.json', 'utf8', function(err, data) {
+    if(err) {
+        console.log('sorry, error');
+    } else {
+        var d = JSON.parse(data);
+        app.get('/user/:id', function(req, res) {
+            console.log("asking for " + req.params.id);
+            var dta = _.filter(d, function(it) {
+                return it.id === parseInt(req.params.id)
+            })
+            if(dta.length === 0) {
+                res.status(404).send('cannot find user');
+            } else {
+                res.send(JSON.stringify(dta, 0, 4))
+            }
+        });
+
+        app.listen(3000, function () {
+            console.log('Ready: http://localhost:3000/1');
+        })
+    }
+})
+#+end_src
+
+* Promises
+
+
+#+begin_src language :exports both :results output
+var _ = require('lodash');
+var fs = require('fs');
+
+var express = require('express');
+var app = express();
+var $b = require('bluebird')
+
+fs = $b.promisifyAll(fs)
+
+fs.readFileAsync('./dat.json', 'utf8').then(function(data) {
+        var d = JSON.parse(data);
+        app.get('/user/:id', function(req, res) {
+            console.log("asking for " + req.params.id);
+            var dta = _.filter(d, function(it) {
+                return it.id === parseInt(req.params.id)
+            })
+            if(dta.length === 0) {
+                res.status(404).send('cannot find user');
+            } else {
+                res.send(JSON.stringify(dta, 0, 4))
+            }
+        });
+
+        app.listen(3000, function () {
+            console.log('Ready: http://localhost:3000/1');
+        })
+}).catch(function (err) {
+    console.log('sorry, error');
+})
+#+end_src
+
+* SQL
+
+  npm install knex --save
+  npm install sqlite3 --save
+
+
+#+begin_src js :exports both :results output
+var _ = require('lodash');
+var fs = require('fs');
+
+var express = require('express');
+var app = express();
+var $b = require('bluebird')
+
+var sql = require('knex')({
+    client: 'sqlite3',
+    debug: true,
+    connection: {
+        filename: "./mydb.sqlite"
+    }
+});
+
+
+function initialize() {
+    return sql.schema.createTableIfNotExists('users', function(table) {
+        table.increments();
+        table.string('name');
+    }).then(function() {
+        return $b.all([
+            sql('users').insert({
+                name: 'pippo'
+            }),
+            sql('users').insert({
+                name: 'pluto'
+            })
+        ])
+    })
+}
+
+initialize().then(function() {
+    app.get('/user/:id', function(req, res) {
+        sql('users').where('id' , req.params.id).then(function(data) {
+            res.send(JSON.stringify(data, 0, 4))
+        })
+    });
+
+    app.listen(3000, function() {
+        console.log('Ready: http://localhost:3000/1');
+    })
+})
+#+end_src
