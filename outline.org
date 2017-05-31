@@ -1,31 +1,195 @@
-* Initialize Screen capture
+#+TITLE: A primer on web services
+#+INCLUDE: ./beamer_modern.org
 
-  view init svga
-  view list # Read window number
-  view set WINNUM
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
 
-* Sintassi simile al C
+* Introduction to web services
+** What are we talking about?
 
-* Chiusure
+   A way of building *client/server architectures* using modern standards (the
+   web). You see an incarnation of this in all modern web applications you can
+   use on the the internet (Amazon, Twitter, _put your favorite web site here_).
+
+   In the following we will assume *client=browser + web page* while server is, well.., a web
+   server.
+
+** Service oriented architecture
+
+   It is one of the most used ways to build a *client/server application*. It is
+   the modern day incarnation of the *reuse paradigm*, where applications are
+   built by *integrating existing components* instead of rewriting them from scratch.
+
+   Central topics:
+
+   - Service: *a software functionality* that can be *reused* by different clients for
+     different purposes.
+
+   - Common application components are *factored out* to become *services*.
+
+** No SOA
+#+BEGIN_EXPORT latex
+\begin{figure}
+\begin{tikzpicture}
+
+% Apps
+\node (a) [app, align=center] at (0,0) {order\\processing}; 
+\node (b) [app, align=center] at (3,0) {account\\management}; 
+\node (ab) [blue dotted, fit = (a) (b) ] {};
 
 
-#+begin_src js :exports both :results output
-var genF = function(nome) {
-    return function() {
-        console.log("Ciao " + nome);
-    }
-}
-
-setTimeout(genF("Vittorio"), 1000)
-#+end_src
-
-#+RESULTS:
-: Ciao Vittorio
+% DBs
+\node (c) [db] at (0.5,-3) {sales}; 
+\node (d) [db] at (2.5,-3) {inventory}; 
+\node (cd) [blue dotted, fit = (c) (d) ] {};
 
 
+% SQL queries arrows
+\draw [arrow] (a) to (c.east);
+\draw [arrow] (b) to (d.east);
+\draw [arrow] (a) to (d.east);
+\draw [arrow] (b) to (c.east);
+
+% Description labels
+\node [descr,minimum width=2cm,align=left] at (5.5,0)  { Application layer };
+\node [descr,minimum width=2cm,align=left] at (5.5,-1.2) { Tightly coupled communication };
+\node [descr,minimum width=2cm,align=left] at (5.5,-3) { Databases };
+\node [format] at (1.5,-1.2) { SQL };
+
+\end{tikzpicture}
+\end{figure}
+#+END_EXPORT
+
+** With SOA
+
+#+BEGIN_EXPORT latex
+\begin{figure}
+\begin{tikzpicture}
+
+% Apps
+\node (a) [app, align=center] at (0,0) {order\\processing}; 
+\node (b) [app, align=center] at (3,0) {account\\management}; 
+
+\node (b1) [app, align=center] at (1.5,-2) {order status}; 
+
+% DBs
+\node (c) [db] at (0.5,-4) {sales}; 
+\node (d) [db] at (2.5,-4) {inventory}; 
+
+% Arrows (apps to service)
+\draw [arrow] (a) to (b1);
+\draw [arrow] (b) to (b1);
+
+% Arrows (service to db)
+\draw [arrow] (b1) to (c.east);
+\draw [arrow] (b1) to (d.east);
+
+% Labels
+
+\node [descr] at ($ (b1) + (1.5,0) $) { Service layer };
+\node [format] at (1.5,-1) { RPC };
+\node [format] at (1.5,-3) { SQL };
+\end{tikzpicture}
+\end{figure}
+#+END_EXPORT
+
+** Web services 
+   
+#+BEGIN_EXPORT latex
+\begin{figure}
+\begin{tikzpicture}
+
+% Apps
+\node (a) [app, align=center] at (0,0) {browser}; 
+\node (b) [app, align=center] at (3,0) {browser}; 
+
+\node (b1) [app, align=center] at (1.5,-2) {web server}; 
+
+% DBs
+\node (c) [db] at (0.5,-4) {db 1}; 
+\node (d) [db] at (2.5,-4) {db 2}; 
+
+% Arrows (apps to service)
+\draw [arrow, blue dotted] (a) to (b1);
+\draw [arrow, blue dotted] (b) to (b1);
+
+% Arrows (service to db)
+\draw [arrow] (b1) to (c.east);
+\draw [arrow] (b1) to (d.east);
+
+% Labels
+
+\node [descr] at ($ (b1) + (1.5,0) $) { Service layer };
+\node [format] at (1.5,-1) { REST/SOAP };
+\node [format] at (1.5,-3) { SQL };
+\end{tikzpicture}
+\end{figure}
+#+END_EXPORT
+
+   Apps run in a *browser* and communicate with the service on the *internet* (dotted blue lines). 
+   A [[https://en.wikipedia.org/wiki/List_of_web_service_protocols][number of web service protocols]] exist. Most used are [[https://en.wikipedia.org/wiki/Representational_state_transfer][REST]] and [[https://en.wikipedia.org/wiki/SOAP][SOAP]].
+
+** Web services
+#+BEGIN_EXPORT latex
+\begin{figure}
+\begin{tikzpicture}
+
+% Apps
+\node (a) [app, align=center] at (0,0) {browser}; 
+\node (b) [app, align=center] at (3,0) {browser}; 
+
+\node (b1) [app, align=center] at (1.5,-2) {web server}; 
+\node [resource] at (1,   -2.5)   {R1}; 
+\node [resource] at (1.5, -2.5) {R2}; 
+\node [resource] at (2,   -2.5)   {R3}; 
 
 
-* Moduli
+% Arrows (apps to service)
+\draw [arrow, blue dotted] (a) to (b1);
+\draw [arrow, blue dotted] (b) to (b1);
+
+% Labels
+
+\node [descr] at ($ (b1) + (1.5,0) $) { Service layer };
+\node [format] at (1.5,-1) { REST };
+\end{tikzpicture}
+\end{figure}
+#+END_EXPORT
+
+Let's abstract away the database tier and the SOAP protocol for the moment. A
+request (\tikz{\draw [arrow, blue dotted] (0,0.2) to (1,0)}) is a particular
+kind of [[https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol][HTTP message]] which allows the client to perform an *operation* on *a
+resource hosted on the server*. A resource can be anything, from a web page up to
+an abstract entity like a customer order.
+
+
+** What is a resource?
+   
+   A resource has:
+
+   - an *identifier* (local to the server) called [[https://en.wikipedia.org/wiki/Uniform_Resource_Identifier][URI.]] 
+
+   - a *state.* You can change the resource's state through a request using [[https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods][HTTP verbs]].
+
+   - a *representation*. You really don't know how a resource is actually reified
+     in the server, all you get is a textual representation of it (JSON, XML and
+     so on.).
+
+
+** Protocols 
+   Typically, these are protocols based on HTTP, REST and SOAP.
+
+** How we are going to use web services in this course?
+
+   Build a server that provides the following services
+
+     - Serves web pages 
+     - Provide a REST interface to a database
+
+** How we are going to implement these?
+
+* The Nodejs ecosystem (2017)
+** CLI 
+** Modules
 
   - npm init
 
@@ -33,7 +197,7 @@ setTimeout(genF("Vittorio"), 1000)
 
   - mappa su array di numeri
 
-#+begin_src js :exports both :results output
+#+begin_src js
 var _ = require('lodash');
 var r = [1,2,3]
 
@@ -48,10 +212,35 @@ _.map(_.filter(r, function(v) {
 : 1
 : 2
 
-* Leggi e filtra file di oggetti
+** npm 
+
+* Javascript on Nodejs
+** Basics
+** Advanced / Callbacks 
+** Advanced / Closures
 
 
-#+begin_src js :exports both :results output
+#+begin_src js 
+  var genF = function(nome) {
+      return function() {
+          console.log("Ciao " + nome);
+      }
+  }
+
+  setTimeout(genF("Vittorio"), 1000)
+#+end_src
+
+#+RESULTS:
+: Ciao Vittorio
+
+** Advanced / Promises
+** Advanced / Generators?
+
+* Building webservices with NodeJS (Demo)
+** Leggi e filtra file di oggetti
+
+
+#+begin_src js 
 var _ = require('lodash');
 var fs = require('fs');
 
@@ -74,10 +263,9 @@ fs.readFile('./data.json', 'utf8', function(err, data) {
 : Young
 : Milligan
 
+** Express
 
-* Express
-
-#+begin_src language :exports both :results output
+#+begin_src js
 var _ = require('lodash');
 var fs = require('fs');
 
@@ -109,10 +297,10 @@ fs.readFile('./data.json', 'utf8', function(err, data) {
 })
 #+end_src
 
-* Promises
+** Promises
 
 
-#+begin_src language :exports both :results output
+#+begin_src js 
 var _ = require('lodash');
 var fs = require('fs');
 
@@ -144,7 +332,7 @@ fs.readFileAsync('./dat.json', 'utf8').then(function(data) {
 })
 #+end_src
 
-* SQL
+** SQL
 
   npm install knex --save
   npm install sqlite3 --save
